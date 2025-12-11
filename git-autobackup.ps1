@@ -207,13 +207,19 @@ function Start-GitAutoBackup {
         param($type, $path, $oldPath)
         Write-Host -NoNewline '.'
         $item = Get-Item -LiteralPath $path -ErrorAction SilentlyContinue
+        $length = $null
+        $lastWrite = $null
+        if ($null -ne $item) {
+            $length = $item.Length
+            $lastWrite = $item.LastWriteTime
+        }
         $eventData = [pscustomobject]@{
             Type          = $type
             Path          = $path
             OldPath       = $oldPath
             Timestamp     = Get-Date
-            Length        = $item.Length
-            LastWriteTime = $item.LastWriteTime
+            Length        = $length
+            LastWriteTime = $lastWrite
         }
         $eventQueue.Enqueue($eventData) | Out-Null
         & $resetTimer
@@ -234,7 +240,7 @@ function Start-GitAutoBackup {
 
     $stopRequested = $false
 
-    Register-EngineEvent -SourceIdentifier Console_CancelKeyPress -Action {
+    Register-EngineEvent -InputObject ([Console]::CancelKeyPress) -EventName CancelKeyPress -SourceIdentifier Console_CancelKeyPress -Action {
         Write-Host "`nStopping Git Auto-Backup Sentinel..."
         $watcher.EnableRaisingEvents = $false
         foreach ($sub in $subscriptions) { Unregister-Event -SubscriptionId $sub.Id -ErrorAction SilentlyContinue }
@@ -247,10 +253,13 @@ function Start-GitAutoBackup {
 
     & $resetTimer
     while (-not $stopRequested) {
-        $event = Wait-Event
+        $event = Wait-Event -Timeout 1
+        if (-not $event) { continue }
         if ($event.SourceIdentifier -eq 'Console_CancelKeyPress') {
+            Remove-Event -EventIdentifier $event.EventIdentifier -ErrorAction SilentlyContinue
             break
         }
+        Remove-Event -EventIdentifier $event.EventIdentifier -ErrorAction SilentlyContinue
     }
 }
 
