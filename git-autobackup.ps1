@@ -33,7 +33,7 @@ function New-AutoBackupConfig {
     }
 
     $gitArgs = @('--git-dir', $GitDir, '--work-tree', $TargetPath)
-    $null = & git @gitArgs rev-parse --git-dir 2>$null
+    $null = & git @gitArgs rev-parse --git-dir *> $null
     if ($LASTEXITCODE -ne 0) {
         throw "GitDir '$GitDir' is not a valid git repository."
     }
@@ -168,9 +168,9 @@ function Start-GitAutoBackup {
 
     $timerEvent = Register-ObjectEvent -InputObject $timer -EventName Elapsed -Action {
         $localEvents = @()
-        $queuedEvent = $null
-        while ($eventQueue.TryDequeue([ref]$queuedEvent)) {
-            $localEvents += $queuedEvent
+        $dequeuedEvent = $null
+        while ($eventQueue.TryDequeue([ref]$dequeuedEvent)) {
+            $localEvents += $dequeuedEvent
         }
 
         if (-not $localEvents) {
@@ -274,6 +274,7 @@ function Start-GitAutoBackup {
     $watcher.Dispose()
 }
 
+# Run automatically unless the script is dot-sourced (used by tests).
 if ($MyInvocation.InvocationName -ne '.') {
     Start-GitAutoBackup @PSBoundParameters
 }

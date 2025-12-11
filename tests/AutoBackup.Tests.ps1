@@ -11,7 +11,7 @@ Describe 'New-AutoBackupConfig' {
         $repoRoot = Join-Path $TestDrive 'repo'
         $null = New-Item -ItemType Directory -Path $repoRoot
         Push-Location $repoRoot
-        git init *> $null
+        git init 2>&1 | Out-Null
         Pop-Location
 
         $config = New-AutoBackupConfig -TargetPath $repoRoot -BufferSeconds 5
