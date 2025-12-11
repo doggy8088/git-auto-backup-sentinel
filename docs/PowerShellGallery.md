@@ -4,7 +4,7 @@
 
 ## 先決條件
 
-- 安裝 PowerShellGet：`Install-Module PowerShellGet -Scope CurrentUser`.
+- 安裝 PowerShellGet：`Install-Module PowerShellGet -Scope CurrentUser`
 - 申請並設定 NuGet API Key（`$env:NuGetApiKey`）。
 - 確保 `git-autobackup.ps1` 放在模組資料夾並包含必要中繼資料（Version、Author、LicenseUri）。
 
@@ -27,7 +27,7 @@ Publish-Module -Path .\GitAutoBackupSentinel -NuGetApiKey $env:NuGetApiKey -Repo
 
 ## 驗證
 
-- 安裝測試：`Install-Module GitAutoBackupSentinel -Scope CurrentUser`.
+- 安裝測試：`Install-Module GitAutoBackupSentinel -Scope CurrentUser`
 - 執行：`git-autobackup.ps1 -BufferSeconds 5 -AutoPush`.
 
 ## 常見問題

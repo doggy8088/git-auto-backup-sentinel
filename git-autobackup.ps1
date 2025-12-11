@@ -141,11 +141,14 @@ function Invoke-BackupCommit {
 
 function Start-GitAutoBackup {
     param(
-        [string]$TargetPath = $TargetPath,
-        [int]$BufferSeconds = $BufferSeconds,
-        [switch]$AutoPush = $AutoPush,
-        [string]$GitDir = $GitDir
+        [string]$TargetPath,
+        [int]$BufferSeconds,
+        [switch]$AutoPush,
+        [string]$GitDir
     )
+
+    if (-not $TargetPath) { $TargetPath = (Get-Location).Path }
+    if (-not $BufferSeconds -or $BufferSeconds -le 0) { $BufferSeconds = 5 }
 
     $config = New-AutoBackupConfig -TargetPath $TargetPath -BufferSeconds $BufferSeconds -AutoPush:$AutoPush -GitDir $GitDir
     $eventQueue = New-Object System.Collections.Concurrent.ConcurrentQueue[object]
