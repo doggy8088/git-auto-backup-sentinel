@@ -1,7 +1,8 @@
 Import-Module Pester -ErrorAction Stop
 
 BeforeAll {
-    $scriptPath = Join-Path $PSScriptRoot '..' | Join-Path -ChildPath 'git-autobackup.ps1'
+    $root = Split-Path -Path $PSScriptRoot -Parent
+    $scriptPath = Join-Path -Path $root -ChildPath 'git-autobackup.ps1'
     . $scriptPath
 }
 

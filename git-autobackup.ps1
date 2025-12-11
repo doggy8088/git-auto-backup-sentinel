@@ -33,7 +33,7 @@ function New-AutoBackupConfig {
     }
 
     $gitArgs = @('--git-dir', $GitDir, '--work-tree', $TargetPath)
-    $gitCheck = & git @gitArgs rev-parse --git-dir 2>$null
+    $null = & git @gitArgs rev-parse --git-dir 2>$null
     if ($LASTEXITCODE -ne 0) {
         throw "GitDir '$GitDir' is not a valid git repository."
     }
@@ -168,9 +168,9 @@ function Start-GitAutoBackup {
 
     $timerEvent = Register-ObjectEvent -InputObject $timer -EventName Elapsed -Action {
         $localEvents = @()
-        $ev = $null
-        while ($eventQueue.TryDequeue([ref]$ev)) {
-            $localEvents += $ev
+        $queuedEvent = $null
+        while ($eventQueue.TryDequeue([ref]$queuedEvent)) {
+            $localEvents += $queuedEvent
         }
 
         if (-not $localEvents) {
