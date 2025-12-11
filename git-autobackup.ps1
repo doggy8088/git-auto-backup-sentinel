@@ -214,7 +214,9 @@ function Start-GitAutoBackup {
         $length = $null
         $lastWrite = $null
         if ($null -ne $item) {
-            $length = $item.Length
+            if (-not $item.PSIsContainer) {
+                $length = $item.Length
+            }
             $lastWrite = $item.LastWriteTime
         }
         $eventData = [pscustomobject]@{
@@ -242,15 +244,15 @@ function Start-GitAutoBackup {
         & $recordEvent 'Renamed' $Event.SourceEventArgs.FullPath $Event.SourceEventArgs.OldFullPath
     }
 
-    $stopRequested = $false
+    $stopEvent = New-Object System.Threading.ManualResetEvent($false)
 
     Register-ObjectEvent -InputObject ([System.Console]) -EventName CancelKeyPress -SourceIdentifier Console_CancelKeyPress -Action {
         Write-Host "`nStopping Git Auto-Backup Sentinel..."
-        $ExecutionContext.SessionState.PSVariable.Set('stopRequested', $true)
+        $stopEvent.Set() | Out-Null
     } | Out-Null
 
     & $resetTimer
-    while (-not $stopRequested) {
+    while (-not $stopEvent.WaitOne(0)) {
         $event = Wait-Event -Timeout 1
         if (-not $event) { continue }
         if ($event.SourceIdentifier -eq 'Console_CancelKeyPress') {
