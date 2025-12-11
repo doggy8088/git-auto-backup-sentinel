@@ -3,7 +3,7 @@
     ModuleVersion     = '1.0.0'
     GUID              = '00000000-0000-0000-0000-000000000001'
     Author            = 'Will 保哥'
-    CompanyName       = 'Community'
+    CompanyName       = 'Duotify Inc.'
     LicenseUri        = 'https://opensource.org/licenses/MIT'
     ProjectUri        = 'https://github.com/doggy8088/git-auto-backup-sentinel'
     Description       = 'Automatically stage, commit, and optionally push git changes with debounced filesystem monitoring.'
