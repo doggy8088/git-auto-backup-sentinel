@@ -7,9 +7,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  permissions:
-    contents: read
   test:
     runs-on: ubuntu-latest
     steps:
