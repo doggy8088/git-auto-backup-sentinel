@@ -10,13 +10,13 @@
 
 ## 打包模組
 
-1. 建立模組結構：
+1. 使用本倉庫提供的 `GitAutoBackupSentinel.psd1`，或依下列結構調整：
    ```
    .\GitAutoBackupSentinel\
      GitAutoBackupSentinel.psd1
      git-autobackup.ps1
    ```
-2. 編寫 `GitAutoBackupSentinel.psd1`，設定 `RootModule = 'git-autobackup.ps1'`、`Author = 'Will 保哥'`、`LicenseUri` 指向 MIT 授權。
+2. 若需要自訂，請確保 `RootModule = 'git-autobackup.ps1'`、`Author = 'Will 保哥'`、`LicenseUri` 指向 MIT 授權。
 3. 版本號遵循語意化版本。
 
 ## 發佈
@@ -28,7 +28,7 @@ Publish-Module -Path .\GitAutoBackupSentinel -NuGetApiKey $env:NuGetApiKey -Repo
 ## 驗證
 
 - 安裝測試：`Install-Module GitAutoBackupSentinel -Scope CurrentUser`
-- 執行：`git-autobackup.ps1 -BufferSeconds 5 -AutoPush`.
+- 執行：`git-autobackup.ps1 -BufferSeconds 5 -AutoPush -Init`
 
 ## 常見問題
 

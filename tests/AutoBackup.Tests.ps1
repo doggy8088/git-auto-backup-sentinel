@@ -21,6 +21,33 @@ Describe 'New-AutoBackupConfig' {
     }
 }
 
+Describe 'Initialize-GitRepo' {
+    It 'initializes repository with default git dir' {
+        $repoRoot = Join-Path $TestDrive 'init-default'
+        $null = New-Item -ItemType Directory -Path $repoRoot
+
+        $gitDir = Initialize-GitRepo -TargetPath $repoRoot
+
+        Test-Path (Join-Path $repoRoot '.git') | Should -BeTrue
+        $gitDir | Should -Be (Join-Path $repoRoot '.git')
+        & git --git-dir $gitDir --work-tree $repoRoot rev-parse --git-dir 2>&1 | Out-Null
+        $LASTEXITCODE | Should -Be 0
+    }
+
+    It 'supports separate git dir initialization' {
+        $repoRoot = Join-Path $TestDrive 'init-separate'
+        $gitDir = Join-Path $TestDrive 'store/.git'
+        $null = New-Item -ItemType Directory -Path $repoRoot
+
+        $result = Initialize-GitRepo -TargetPath $repoRoot -GitDir $gitDir
+
+        $result | Should -Be $gitDir
+        Test-Path $gitDir | Should -BeTrue
+        & git --git-dir $gitDir --work-tree $repoRoot rev-parse --git-dir 2>&1 | Out-Null
+        $LASTEXITCODE | Should -Be 0
+    }
+}
+
 Describe 'Format-EventDescription' {
     It 'formats renamed events with metadata' {
         $now = Get-Date

@@ -2,7 +2,8 @@ param(
     [string]$TargetPath = (Get-Location).Path,
     [int]$BufferSeconds = 5,
     [switch]$AutoPush,
-    [string]$GitDir
+    [string]$GitDir,
+    [switch]$Init
 )
 
 Set-StrictMode -Version Latest
@@ -45,6 +46,44 @@ function New-AutoBackupConfig {
         GitDir        = (Resolve-Path -LiteralPath $GitDir).Path
         GitArgs       = $gitArgs
     }
+}
+
+function Initialize-GitRepo {
+    param(
+        [string]$TargetPath,
+        [string]$GitDir
+    )
+
+    if (-not $GitDir) {
+        $GitDir = Join-Path $TargetPath '.git'
+    }
+
+    if (Test-Path $GitDir) {
+        $null = & git --git-dir $GitDir --work-tree $TargetPath rev-parse --git-dir *> $null
+        if ($LASTEXITCODE -eq 0) {
+            return $GitDir
+        }
+    }
+
+    $parentDir = Split-Path -Path $GitDir -Parent
+    if ($parentDir -and -not (Test-Path $parentDir)) {
+        New-Item -ItemType Directory -Path $parentDir -Force | Out-Null
+    }
+
+    $initArgs = @('-C', $TargetPath, 'init', '-b', 'main')
+    if ($GitDir -ne (Join-Path $TargetPath '.git')) {
+        if (-not (Test-Path $GitDir)) {
+            New-Item -ItemType Directory -Path $GitDir -Force | Out-Null
+        }
+        $initArgs += "--separate-git-dir=$GitDir"
+    }
+
+    $null = & git @initArgs *> $null
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to initialize git repository at '$TargetPath' with git dir '$GitDir'."
+    }
+
+    return $GitDir
 }
 
 function Invoke-GitCommand {
@@ -144,11 +183,19 @@ function Start-GitAutoBackup {
         [string]$TargetPath,
         [int]$BufferSeconds,
         [switch]$AutoPush,
-        [string]$GitDir
+        [string]$GitDir,
+        [switch]$Init
     )
 
     if (-not $TargetPath) { $TargetPath = (Get-Location).Path }
     if (-not $BufferSeconds -or $BufferSeconds -le 0) { $BufferSeconds = 5 }
+    if (-not (Test-Path $TargetPath)) {
+        throw "TargetPath '$TargetPath' does not exist."
+    }
+
+    if ($Init) {
+        $GitDir = Initialize-GitRepo -TargetPath $TargetPath -GitDir $GitDir
+    }
 
     $config = New-AutoBackupConfig -TargetPath $TargetPath -BufferSeconds $BufferSeconds -AutoPush:$AutoPush -GitDir $GitDir
     $eventQueue = New-Object System.Collections.Concurrent.ConcurrentQueue[object]
