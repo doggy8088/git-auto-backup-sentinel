@@ -165,6 +165,7 @@ function Start-GitAutoBackup {
 
     $timerEvent = Register-ObjectEvent -InputObject $timer -EventName Elapsed -Action {
         $localEvents = @()
+        $ev = $null
         while ($eventQueue.TryDequeue([ref]$ev)) {
             $localEvents += $ev
         }
@@ -206,7 +207,10 @@ function Start-GitAutoBackup {
     $recordEvent = {
         param($type, $path, $oldPath)
         Write-Host -NoNewline '.'
-        $item = Get-Item -LiteralPath $path -ErrorAction SilentlyContinue
+        $item = $null
+        if ($type -ne 'Deleted') {
+            $item = Get-Item -LiteralPath $path -ErrorAction SilentlyContinue
+        }
         $length = $null
         $lastWrite = $null
         if ($null -ne $item) {
@@ -240,14 +244,8 @@ function Start-GitAutoBackup {
 
     $stopRequested = $false
 
-    Register-EngineEvent -InputObject ([Console]::CancelKeyPress) -EventName CancelKeyPress -SourceIdentifier Console_CancelKeyPress -Action {
+    Register-ObjectEvent -InputObject ([System.Console]) -EventName CancelKeyPress -SourceIdentifier Console_CancelKeyPress -Action {
         Write-Host "`nStopping Git Auto-Backup Sentinel..."
-        $watcher.EnableRaisingEvents = $false
-        foreach ($sub in $subscriptions) { Unregister-Event -SubscriptionId $sub.Id -ErrorAction SilentlyContinue }
-        Unregister-Event -SourceIdentifier $timerEvent.Name -ErrorAction SilentlyContinue
-        $timer.Stop()
-        $timer.Dispose()
-        $watcher.Dispose()
         $ExecutionContext.SessionState.PSVariable.Set('stopRequested', $true)
     } | Out-Null
 
@@ -261,6 +259,14 @@ function Start-GitAutoBackup {
         }
         Remove-Event -EventIdentifier $event.EventIdentifier -ErrorAction SilentlyContinue
     }
+
+    $watcher.EnableRaisingEvents = $false
+    foreach ($sub in $subscriptions) { Unregister-Event -SubscriptionId $sub.Id -ErrorAction SilentlyContinue }
+    Unregister-Event -SourceIdentifier $timerEvent.Name -ErrorAction SilentlyContinue
+    Unregister-Event -SourceIdentifier Console_CancelKeyPress -ErrorAction SilentlyContinue
+    $timer.Stop()
+    $timer.Dispose()
+    $watcher.Dispose()
 }
 
 if ($MyInvocation.InvocationName -ne '.') {
